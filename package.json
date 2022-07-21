@@ -1,0 +1,14 @@
+{
+  "name": "pactman",
+  "version": "1.0.0",
+  "description": "Consumer driven contract testing with Postman collections.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jordan Walsh <jordanwalsh23@gmail.com>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "axios": "^0.27.2"
+  }
+}
