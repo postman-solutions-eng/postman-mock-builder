@@ -9,6 +9,7 @@
   "author": "Jordan Walsh <jordanwalsh23@gmail.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "genson-js": "^0.0.8"
   }
 }

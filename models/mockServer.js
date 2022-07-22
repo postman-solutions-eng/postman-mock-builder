@@ -71,6 +71,23 @@ class MockServer {
 
     return response.data;
   }
+
+  //Iterate through all collections and delete each one
+  static async deleteAll(workspaceId) {
+
+    if(!workspaceId){
+      throw new Error('Workspace ID is required.')
+    }
+
+    let response = await instance.get(`/collections?workspace=${workspaceId}`);
+    let data = response.data;
+
+    for(let collection of data.collections) {
+      console.log("deleting collection:" + collection.uid);
+      //await instance.delete(`/collections/${collection.uid}`);
+    }
+    return response.data;
+  }
 }
 
 module.exports = MockServer
