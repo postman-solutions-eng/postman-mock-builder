@@ -14,9 +14,20 @@ class State {
 
     let data = response.data;
 
+    //Add the folder to the collection
     data.collection.item.push({
       name: name,
-      item: []
+      item: [],
+      event: [{
+        listen: "prerequest",
+        script: {
+          type: "text/javascript",
+          exec: [
+            "//Expected State: " + name,
+            "//To be popuplated by the API producer."
+          ]
+        }
+      }]
     })
 
     response = await instance.put(`/collections/${collectionId}`, data)
@@ -24,13 +35,17 @@ class State {
     return new State(name, collectionId);
   }
 
-  async addRequest (method, url, options) {
+  async addRequest (method, url, headers, body) {
 
-    if(!options){
-      options = {}
+    if(!headers || Object.keys(headers).length == 0) {
+      headers = {}
     }
 
-    let newRequest = await Request.create(this.collectionId, this.name, method, url, options);
+    if(!body) {
+      body = "";
+    }
+
+    let newRequest = await Request.create(this, method, url, headers, body);
     this.requests.push(newRequest);
 
     return newRequest;
