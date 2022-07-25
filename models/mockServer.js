@@ -61,6 +61,8 @@ class MockServer {
       data.collection.variable = [];
     }
 
+    //TODO - Replace variable if it has the same name.
+
     data.collection.variable.push({
       key: name,
       value: value,
@@ -69,23 +71,6 @@ class MockServer {
     
     response = await instance.put(`/collections/${this.collectionId}`, data)
 
-    return response.data;
-  }
-
-  //Iterate through all collections and delete each one
-  static async deleteAll(workspaceId) {
-
-    if(!workspaceId){
-      throw new Error('Workspace ID is required.')
-    }
-
-    let response = await instance.get(`/collections?workspace=${workspaceId}`);
-    let data = response.data;
-
-    for(let collection of data.collections) {
-      console.log("deleting collection:" + collection.uid);
-      //await instance.delete(`/collections/${collection.uid}`);
-    }
     return response.data;
   }
 }

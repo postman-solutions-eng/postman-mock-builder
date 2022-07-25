@@ -72,8 +72,6 @@ class Request {
       }
     }
 
-    console.log(JSON.stringify(data))
-
     //Update the collection
     response = await instance.put(`/collections/${state.collectionId}`, data)
 
@@ -94,8 +92,6 @@ class Request {
       headers = {};
     }
 
-    console.log("adding response")
-    console.log(this, status, body, headers)
     let newResponse = await Response.create(this, status, body, headers);
     this.responses.push(newResponse);
 
