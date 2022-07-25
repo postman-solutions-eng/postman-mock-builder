@@ -18,14 +18,6 @@ class Response {
     for (let item of data.collection.item) {
       if (item.name == request.state.name) {
         for (let requestConfig of item.item) {
-          console.log('REQUEST IS:' + JSON.stringify(requestConfig))
-
-          console.log(
-            'Equals:',
-            requestConfig.name,
-            `${request.method} ${request.url}`,
-            requestConfig.name == `${request.method} ${request.url}`
-          )
 
           if (requestConfig.name == `${request.method} ${request.url}`) {
             //Calculate URL
@@ -117,8 +109,6 @@ class Response {
         }
       }
     }
-
-    console.log('updating collection:' + JSON.stringify(data))
 
     response = await instance.put(`/collections/${request.state.collectionId}`, data)
     return new Response(request, status, body, headers)
