@@ -84,23 +84,69 @@ class Response {
 
             const schema = JSON.stringify(createSchema(body));
 
+            let requestDetails = JSON.stringify({
+              apiVersion: request.state.apiVersion,
+              state: request.state.name,
+              request: request.name,
+              tests: []
+            });
+
             requestConfig.event.push({
               listen: 'test',
               script: {
                 exec: [
+                  "let testResults = pm.collectionVariables.get(\"test-results\");",
+									"",
+									"if(!testResults) {",
+									"    testResults = [];",
+									"} else {",
+									"    testResults = JSON.parse(testResults);",
+									"}",
+									"",
+									"let test = \"\";",
+									"let passed = null;",
+									"",
+									"let requestDetails = " + requestDetails + ";",
+									"",
                   '//Validate status code matches expected status code',
+                  "test = 'Status code is " + status + "';",
+									"passed = false;",
                   "pm.test('Status code is " + status + "', function () {",
-                  '    pm.response.to.have.status(' + status + ');',
-                  '});',
+                  "    try {",
+									"        pm.response.to.have.status(" + status + ");",
+									"        passed = true;",
+									"    } finally {",
+									"        requestDetails.tests.push({",
+									"            test: test,",
+									"            result: passed,",
+									"            datetime: Date.now()",
+									"        })",
+									"    }",
+									"});",
                   "var Ajv = require('ajv'),",
                   "ajv = new Ajv({logger: console});",
                   "let schema = " + schema + ";",
 									"",
 									"//Validate response schema matches expected schema",
-									"pm.test(\"Validate schema\", () => {",
-									"    var data = pm.response.json();",
-									"    pm.expect(ajv.validate(schema, data)).to.be.true;",
-									"});"
+                  "test = 'Validate schema';",
+									"passed = false;",
+									"pm.test(test, () => {",
+									"    ",
+									"    try {",
+									"        var data = pm.response.json();",
+									"        pm.expect(ajv.validate(schema, data)).to.be.true;",
+									"        passed = true;",
+									"    } finally {",
+									"        requestDetails.tests.push({",
+									"            test: test,",
+									"            result: passed,",
+									"            datetime: Date.now()",
+									"        })",
+									"    }",
+									"});",
+									"",
+									"testResults.push(requestDetails);",
+									"pm.collectionVariables.set(\"test-results\", JSON.stringify(testResults));"
 								],
 								"type": "text/javascript"
               }
