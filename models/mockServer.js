@@ -24,19 +24,106 @@ class MockServer {
       options.collectionDir = "";
     }
 
+    let collection = {
+      collection: {
+        info: {
+          name: `Contract Tests [${apiVersion}]`,
+          description: `Contract Tests [${apiVersion}]`,
+          schema:
+            'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
+        },
+        item: [{
+          name: "Setup",
+          item: [{
+            name: "Set Variables",
+            event: [
+              {
+                listen: "test",
+                script: {
+                  exec: [
+                    "//Used to differentiate between individual tests and tests run using the collection runner.",
+                    "let testResults = {",
+                    "  id: pm.variables.replaceIn('{{$guid}}'),",
+                    "  createdDate: Date.now(),",
+                    "  apiVersion: \"" + options.apiVersion + "\",",
+                    "  states: []",
+                    "};",
+                    "pm.variables.set(\"testResults\", JSON.stringify(testResults));"
+                  ],
+                  type: "text/javascript"
+                }
+              }
+            ],
+            request: {
+              method: "GET",
+              header: [],
+              url: {
+                raw: "https://postman-echo.com/get",
+                protocol: "https",
+                host: [
+                  "postman-echo",
+                  "com"
+                ],
+                path: [
+                  "get"
+                ]
+              }
+            },
+            "response": []
+          }]
+        }]
+      }
+    }
+
+    if(options.consumerUrl) {
+      collection.collection.item.push({
+        name: "Notify Consumer",
+        item: [{
+          name: "POST Notify Consumer",
+          event: [
+            {
+              listen: "prerequest",
+              script: {
+                exec: [
+                  "if(!pm.variables.get(\"testResults\")) {",
+                  "    throw new Error(\"Cannot notify consumers outside of a full collection run.\")",
+                  "}"
+                ],
+                type: "text/javascript"
+              }
+            }
+          ],
+          request: {
+            method: "POST",
+            header: [],
+            body: {
+              mode: "raw",
+              raw: "{{testResults}}",
+              options: {
+                raw: {
+                  language: "json"
+                }
+              }
+            },
+            url: {
+              raw: "http://9bkmurlbexqk0hin.b.requestbin.net",
+              protocol: "http",
+              host: [
+                "9bkmurlbexqk0hin",
+                "b",
+                "requestbin",
+                "net"
+              ]
+            }
+          },
+          "response": []
+        }]
+      })
+    }
+
     let response = await instance.post(
       `/collections?workspace=${workspaceId}`,
-      {
-        collection: {
-          info: {
-            name: `Contract Tests [${apiVersion}]`,
-            description: `Contract Tests [${apiVersion}]`,
-            schema:
-              'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
-          },
-          item: []
-        }
-      }
+      collection
     )
 
     let data = response.data

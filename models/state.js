@@ -15,7 +15,7 @@ class State {
     let data = response.data;
 
     //Add the folder to the collection
-    data.collection.item.push({
+    data.collection.item.splice(data.collection.item.length - 1, 0,{
       name: name,
       item: [],
       event: [{

@@ -95,14 +95,6 @@ class Response {
               listen: 'test',
               script: {
                 exec: [
-                  "let testResults = pm.collectionVariables.get(\"test-results\");",
-									"",
-									"if(!testResults) {",
-									"    testResults = [];",
-									"} else {",
-									"    testResults = JSON.parse(testResults);",
-									"}",
-									"",
 									"let test = \"\";",
 									"let passed = null;",
 									"",
@@ -118,7 +110,7 @@ class Response {
 									"    } finally {",
 									"        requestDetails.tests.push({",
 									"            test: test,",
-									"            result: passed,",
+									"            passed: passed,",
 									"            datetime: Date.now()",
 									"        })",
 									"    }",
@@ -139,14 +131,18 @@ class Response {
 									"    } finally {",
 									"        requestDetails.tests.push({",
 									"            test: test,",
-									"            result: passed,",
+									"            passed: passed,",
 									"            datetime: Date.now()",
 									"        })",
 									"    }",
 									"});",
 									"",
-									"testResults.push(requestDetails);",
-									"pm.collectionVariables.set(\"test-results\", JSON.stringify(testResults));"
+									"if(pm.variables.get(\"testResults\")) {",
+									"    let testResults = JSON.parse(pm.variables.get(\"testResults\"));",
+									"    testResults.states.push(requestDetails);",
+									"    pm.variables.set(\"testResults\", JSON.stringify(testResults))",
+									"    console.log(\"testResults\", testResults)",
+									"}"
 								],
 								"type": "text/javascript"
               }
