@@ -1,18 +1,19 @@
 'use strict';
-let instance = require('../utils/apiclient').instance
+let instance = require('../utils/apiclient').instance;
+let formatHeaders = require('../utils/common').formatHeaders;
 let Response = require('../models/response');
 
 class Request {
-  constructor (method, url, headers, body, state) {
+  constructor (method, path, headers, body, state) {
     this.method = method;
-    this.url = url;
+    this.path = path;
     this.headers = headers;
     this.body = body;
     this.state = state;
     this.responses = [];
   }
 
-  static async create (state, method, url, headers, body) {
+  static async create (state, method, path, headers, body) {
     
     //Get the current collection
     let response = await instance.get(`/collections/${state.collectionId}`);
@@ -20,41 +21,23 @@ class Request {
     let data = response.data;
 
     //Find the state
-    for(let item of data.collection.item){
-      if(item.name == state.name){
+    for(let folder of data.collection.item){
+      if(folder.name == state.name){
 
         //Calculate URL
-        let urlParts =  url.split('/').reverse();
-        urlParts.splice(3, urlParts.length)
-
-        //Calculate header array
-        if(Object.keys(headers).length > 0) {
-          let newHeaders = [];
-
-          Object.keys(headers).map(function(key, index) {
-            newHeaders.push({
-              key: key,
-              value: headers[key],
-              type: "text"
-            })
-          });
-
-          headers = newHeaders;
-        } else {
-          headers = [];
-        }
+        headers = formatHeaders(headers);
         
         //Create the request within the state.
-        item.item.push({
-          name: `${method} ${url}`,
+        folder.item.push({
+          name: `${method} ${path}`,
           request: {
             method: method,
             header: headers,
             url: {
-              raw: url,
+              raw: path,
               protocol: '',
               host: '{{baseUrl}}',
-              path: urlParts.reverse()
+              path: path.split('/')
             },
             body: {
 							mode: "raw",
@@ -75,7 +58,7 @@ class Request {
     //Update the collection
     response = await instance.put(`/collections/${state.collectionId}`, data)
 
-    return new Request(method, url, headers, body, state);
+    return new Request(method, path, headers, body, state);
   }
 
   async addResponse (status, body, headers) {

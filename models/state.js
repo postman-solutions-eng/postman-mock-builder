@@ -35,7 +35,7 @@ class State {
     return new State(name, collectionId);
   }
 
-  async addRequest (method, url, headers, body) {
+  async addRequest (method, path, headers, body) {
 
     if(!headers || Object.keys(headers).length == 0) {
       headers = {}
@@ -45,7 +45,7 @@ class State {
       body = "";
     }
 
-    let newRequest = await Request.create(this, method, url, headers, body);
+    let newRequest = await Request.create(this, method, path, headers, body);
     this.requests.push(newRequest);
 
     return newRequest;

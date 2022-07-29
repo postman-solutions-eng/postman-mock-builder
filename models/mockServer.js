@@ -46,7 +46,7 @@ class MockServer {
                     "  id: pm.variables.replaceIn('{{$guid}}'),",
                     "  createdDate: Date.now(),",
                     "  apiVersion: \"" + options.apiVersion + "\",",
-                    "  states: []",
+                    "  states: {}",
                     "};",
                     "pm.variables.set(\"testResults\", JSON.stringify(testResults));"
                   ],
@@ -73,9 +73,11 @@ class MockServer {
           }]
         }]
       }
-    }
+    };
 
     if(options.consumerUrl) {
+      let url = new URL(options.consumerUrl);
+
       collection.collection.item.push({
         name: "Notify Consumer",
         item: [{
@@ -106,14 +108,10 @@ class MockServer {
               }
             },
             url: {
-              raw: "http://9bkmurlbexqk0hin.b.requestbin.net",
-              protocol: "http",
-              host: [
-                "9bkmurlbexqk0hin",
-                "b",
-                "requestbin",
-                "net"
-              ]
+              raw: url.href,
+              protocol: url.protocol.split(":")[0],
+              host: url.hostname.split("."),
+              path: url.pathname.split("/")
             }
           },
           "response": []
@@ -189,7 +187,7 @@ class MockServer {
         fs.mkdirSync(this.collectionDir);
     }
 
-    fs.writeFileSync(`${this.collectionDir}/contract-test-api-${this.apiVersion}-${new Date().getUTCMilliseconds()}.json`, JSON.stringify(data, null, 2));
+    fs.writeFileSync(`${this.collectionDir}/contract-test-api-${this.apiVersion}-${Date.now()}.json`, JSON.stringify(data, null, 2));
 
     //delete the mock server and collection
 
