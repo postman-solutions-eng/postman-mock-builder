@@ -1,5 +1,7 @@
 'use strict'
 const createSchema = require('genson-js').createSchema;
+const urlPathToArray = require('../utils/common').urlPathToArray;
+const formatHeaders = require('../utils/common').formatHeaders;
 let instance = require('../utils/apiclient').instance
 
 class Response {
@@ -19,32 +21,14 @@ class Response {
       if (item.name == request.state.name) {
         for (let requestConfig of item.item) {
 
-          if (requestConfig.name == `${request.method} ${request.url}`) {
-            //Calculate URL
-            let urlParts = request.url.split('/').reverse()
-            urlParts.splice(3, urlParts.length)
+          if (requestConfig.name == `${request.method} ${request.path}`) {
+            
+            headers = formatHeaders(headers);
 
-            //Calculate response headers array
-            if (Object.keys(headers).length > 0) {
-              let newHeaders = []
-
-              Object.keys(headers).map(function (key, index) {
-                newHeaders.push({
-                  key: key,
-                  value: headers[key],
-                  type: 'text'
-                })
-              })
-
-              headers = newHeaders
-            } else {
-              headers = []
-            }
-
-            //Add the x-mock-match header to the request.
+            //Add the x-mock-response-name header to the request.
             request.headers.push({
-              key: 'x-mock-response-code',
-              value: status,
+              key: 'x-mock-response-name',
+              value: `${request.method} ${request.path} ${status}`,
               type: 'text'
             });
 
@@ -52,14 +36,14 @@ class Response {
 
             //Add the response config to the item
             requestConfig.response.push({
-              name: `${request.method} ${request.url}`,
+              name: `${request.method} ${request.path} ${status}`,
               originalRequest: {
                 method: request.method,
                 header: request.headers,
                 url: {
-                  raw: request.url,
+                  raw: request.path,
                   host: ['{{baseUrl}}'],
-                  path: urlParts.reverse()
+                  path: request.path.split('/')
                 },
                 body: {
                   mode: "raw",
@@ -85,9 +69,7 @@ class Response {
             const schema = JSON.stringify(createSchema(body));
 
             let requestDetails = JSON.stringify({
-              apiVersion: request.state.apiVersion,
-              state: request.state.name,
-              request: request.name,
+              request: `${request.method} ${request.path}`,
               tests: []
             });
 
@@ -103,7 +85,7 @@ class Response {
                   '//Validate status code matches expected status code',
                   "test = 'Status code is " + status + "';",
 									"passed = false;",
-                  "pm.test('Status code is " + status + "', function () {",
+                  "pm.test(test, () => {",
                   "    try {",
 									"        pm.response.to.have.status(" + status + ");",
 									"        passed = true;",
@@ -139,7 +121,12 @@ class Response {
 									"",
 									"if(pm.variables.get(\"testResults\")) {",
 									"    let testResults = JSON.parse(pm.variables.get(\"testResults\"));",
-									"    testResults.states.push(requestDetails);",
+                  "",
+                  "    if(!testResults.states['"+request.state.name+"']) {",
+                  "        testResults.states['"+request.state.name+"'] = [];",
+                  "    }",
+                  "",
+									"    testResults.states['"+request.state.name+"'].push(requestDetails);",
 									"    pm.variables.set(\"testResults\", JSON.stringify(testResults))",
 									"    console.log(\"testResults\", testResults)",
 									"}"
