@@ -1,0 +1,263 @@
+{
+	"info": {
+		"_postman_id": "1eae92dd-174a-4f20-9b40-2c81b248fcc7",
+		"name": "Contract Tests [v1]",
+		"description": "Contract Tests [v1]",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18475591"
+	},
+	"item": [
+		{
+			"name": "Setup",
+			"item": [
+				{
+					"name": "Set Variables",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//Used to differentiate between individual tests and tests run using the collection runner.",
+									"let testResults = {",
+									"  id: pm.variables.replaceIn('{{$guid}}'),",
+									"  createdDate: Date.now(),",
+									"  apiVersion: \"v1\",",
+									"  states: []",
+									"};",
+									"pm.variables.set(\"testResults\", JSON.stringify(testResults));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://postman-echo.com/get",
+							"protocol": "https",
+							"host": [
+								"postman-echo",
+								"com"
+							],
+							"path": [
+								"get"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Database has a single product.",
+			"item": [
+				{
+					"name": "GET /api/products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let test = \"\";",
+									"let passed = null;",
+									"",
+									"let requestDetails = {\"state\":\"Database has a single product.\",\"tests\":[]};",
+									"",
+									"//Validate status code matches expected status code",
+									"test = 'Status code is 200';",
+									"passed = false;",
+									"pm.test('Status code is 200', function () {",
+									"    try {",
+									"        pm.response.to.have.status(200);",
+									"        passed = true;",
+									"    } finally {",
+									"        requestDetails.tests.push({",
+									"            test: test,",
+									"            passed: passed,",
+									"            datetime: Date.now()",
+									"        })",
+									"    }",
+									"});",
+									"var Ajv = require('ajv'),",
+									"ajv = new Ajv({logger: console});",
+									"let schema = {\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"model\":{\"type\":\"string\"},\"cost\":{\"type\":\"integer\"}},\"required\":[\"name\",\"description\",\"model\",\"cost\"]}};",
+									"",
+									"//Validate response schema matches expected schema",
+									"test = 'Validate schema';",
+									"passed = false;",
+									"pm.test(test, () => {",
+									"    try {",
+									"        var data = pm.response.json();",
+									"        pm.expect(ajv.validate(schema, data)).to.be.true;",
+									"        passed = true;",
+									"    } finally {",
+									"        requestDetails.tests.push({",
+									"            test: test,",
+									"            passed: passed,",
+									"            datetime: Date.now()",
+									"        })",
+									"    }",
+									"});",
+									"",
+									"if(pm.variables.get(\"testResults\")) {",
+									"    let testResults = JSON.parse(pm.variables.get(\"testResults\"));",
+									"    console.log(testResults);",
+									"    testResults.states.push(requestDetails);",
+									"    pm.variables.set(\"testResults\", JSON.stringify(testResults))",
+									"    console.log(\"testResults\", testResults)",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "12345",
+								"type": "text"
+							},
+							{
+								"key": "x-mock-response-code",
+								"value": "200",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "GET /api/products",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "x-api-key",
+										"value": "12345",
+										"type": "text"
+									},
+									{
+										"key": "x-mock-response-code",
+										"value": "200",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/products",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"products"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "[{\"name\":\"Product 1\",\"description\":\"This is product 1\",\"model\":\"P1\",\"cost\":100}]"
+						}
+					]
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"//Expected State: Database has a single product.",
+							"//To be popuplated by the API producer."
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Notify Consumer",
+			"item": [
+				{
+					"name": "POST Notify Consumer",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if(!pm.variables.get(\"testResults\")) {",
+									"    throw new Error(\"Cannot notify consumers outside of a full collection run.\")",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{{testResults}}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://9bkmurlbexqk0hin.b.requestbin.net",
+							"protocol": "http",
+							"host": [
+								"9bkmurlbexqk0hin",
+								"b",
+								"requestbin",
+								"net"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://95facc9e-6afb-4d97-9e3c-ade67bf69769.mock.pstmn.io"
+		}
+	]
+}

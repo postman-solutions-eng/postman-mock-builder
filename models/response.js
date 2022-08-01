@@ -17,10 +17,9 @@ class Response {
 
     let data = response.data
 
-    for (let item of data.collection.item) {
-      if (item.name == request.state.name) {
-        for (let requestConfig of item.item) {
-
+    for (let folder of data.collection.item) {
+      if (folder.name == request.state.name) {
+        for (let requestConfig of folder.item) {
           if (requestConfig.name == `${request.method} ${request.path}`) {
             
             headers = formatHeaders(headers);
@@ -28,7 +27,7 @@ class Response {
             //Add the x-mock-response-name header to the request.
             request.headers.push({
               key: 'x-mock-response-name',
-              value: `${request.method} ${request.path} ${status}`,
+              value: `${request.method} ${request.path} ${requestConfig.id}`,
               type: 'text'
             });
 
@@ -36,7 +35,7 @@ class Response {
 
             //Add the response config to the item
             requestConfig.response.push({
-              name: `${request.method} ${request.path} ${status}`,
+              name: `${request.method} ${request.path} ${requestConfig.id}`,
               originalRequest: {
                 method: request.method,
                 header: request.headers,
