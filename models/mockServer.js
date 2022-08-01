@@ -1,28 +1,18 @@
 'use strict'
-let instance = require('../utils/apiclient').instance;
-let State = require('../models/state');
-const fs = require('fs');
+let instance = require('../utils/apiclient').instance
+let State = require('../models/state')
+const fs = require('fs')
+const PostmanLocalMockServer = require('postman-local')
 
 class MockServer {
-
-  constructor (id, url, name, collectionId, collectionDir, apiVersion) {
-    this.id = id
-    this.url = url
-    this.name = name
-    this.collectionId = collectionId
-    this.states = [],
-    this.collectionDir = collectionDir,
-    this.apiVersion = apiVersion
+  constructor (collection) {
+    this.collection = collection
+    this.states = []
+    this.server = null;
   }
 
-  static async create (options) {
-
-    let workspaceId = options.workspaceId;
-    let apiVersion = options.apiVersion;
-
-    if (!options.collectionDir) {
-      options.collectionDir = "";
-    }
+  static create (options) {
+    let apiVersion = options.apiVersion
 
     let collection = {
       collection: {
@@ -32,132 +22,109 @@ class MockServer {
           schema:
             'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
         },
-        item: [{
-          name: "Setup",
-          item: [{
-            name: "Set Variables",
+        item: [
+          {
+            name: 'Setup',
+            item: [
+              {
+                name: 'Set Variables',
+                event: [
+                  {
+                    listen: 'test',
+                    script: {
+                      exec: [
+                        '//Used to differentiate between individual tests and tests run using the collection runner.',
+                        'let testResults = {',
+                        "  id: pm.variables.replaceIn('{{$guid}}'),",
+                        '  createdDate: Date.now(),',
+                        '  apiVersion: "' + options.apiVersion + '",',
+                        '  states: {}',
+                        '};',
+                        'pm.variables.set("testResults", JSON.stringify(testResults));'
+                      ],
+                      type: 'text/javascript'
+                    }
+                  }
+                ],
+                request: {
+                  method: 'GET',
+                  header: [],
+                  url: {
+                    raw: 'https://postman-echo.com/get',
+                    protocol: 'https',
+                    host: ['postman-echo', 'com'],
+                    path: ['get']
+                  }
+                },
+                response: []
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    if (options.consumerUrl) {
+      let url = new URL(options.consumerUrl)
+
+      collection.collection.item.push({
+        name: 'Notify Consumer',
+        item: [
+          {
+            name: 'POST Notify Consumer',
             event: [
               {
-                listen: "test",
+                listen: 'prerequest',
                 script: {
                   exec: [
-                    "//Used to differentiate between individual tests and tests run using the collection runner.",
-                    "let testResults = {",
-                    "  id: pm.variables.replaceIn('{{$guid}}'),",
-                    "  createdDate: Date.now(),",
-                    "  apiVersion: \"" + options.apiVersion + "\",",
-                    "  states: {}",
-                    "};",
-                    "pm.variables.set(\"testResults\", JSON.stringify(testResults));"
+                    'if(!pm.variables.get("testResults")) {',
+                    '    throw new Error("Cannot notify consumers outside of a full collection run.")',
+                    '}'
                   ],
-                  type: "text/javascript"
+                  type: 'text/javascript'
                 }
               }
             ],
             request: {
-              method: "GET",
+              method: 'POST',
               header: [],
-              url: {
-                raw: "https://postman-echo.com/get",
-                protocol: "https",
-                host: [
-                  "postman-echo",
-                  "com"
-                ],
-                path: [
-                  "get"
-                ]
-              }
-            },
-            "response": []
-          }]
-        }]
-      }
-    };
-
-    if(options.consumerUrl) {
-      let url = new URL(options.consumerUrl);
-
-      collection.collection.item.push({
-        name: "Notify Consumer",
-        item: [{
-          name: "POST Notify Consumer",
-          event: [
-            {
-              listen: "prerequest",
-              script: {
-                exec: [
-                  "if(!pm.variables.get(\"testResults\")) {",
-                  "    throw new Error(\"Cannot notify consumers outside of a full collection run.\")",
-                  "}"
-                ],
-                type: "text/javascript"
-              }
-            }
-          ],
-          request: {
-            method: "POST",
-            header: [],
-            body: {
-              mode: "raw",
-              raw: "{{testResults}}",
-              options: {
-                raw: {
-                  language: "json"
+              body: {
+                mode: 'raw',
+                raw: '{{testResults}}',
+                options: {
+                  raw: {
+                    language: 'json'
+                  }
                 }
+              },
+              url: {
+                raw: url.href,
+                protocol: url.protocol.split(':')[0],
+                host: url.hostname.split('.'),
+                path: url.pathname.split('/')
               }
             },
-            url: {
-              raw: url.href,
-              protocol: url.protocol.split(":")[0],
-              host: url.hostname.split("."),
-              path: url.pathname.split("/")
-            }
-          },
-          "response": []
-        }]
+            response: []
+          }
+        ]
       })
     }
 
-    let response = await instance.post(
-      `/collections?workspace=${workspaceId}`,
-      collection
-    )
-
-    let data = response.data
-    let collectionId = data.collection.uid
-
-    //Create a mock server request.
-    let mockResponse = await instance.post(`/mocks?workspace=${workspaceId}`, {
-      mock: {
-        collection: collectionId,
-        name: `Contract Tests [${apiVersion}]`
-      }
-    })
-
-    return new MockServer(
-      mockResponse.data.mock.uid,
-      mockResponse.data.mock.mockUrl,
-      mockResponse.data.mock.name,
-      mockResponse.data.mock.collection,
-      options.collectionDir,
-      apiVersion
-    )
+    return new MockServer(collection)
   }
 
-  async addState(state) {
-    let newState = await State.create(this.collectionId, state);
-    this.states.push(newState);
+  addState (state) {
+    let newState = State.create(this.collection.collection, state)
+    this.states.push(newState)
 
-    return newState;
+    return newState
   }
 
-  async addVariable(name, value) {
-    let response = await instance.get(`/collections/${this.collectionId}`)
-    let data = response.data;
+  addVariable (name, value) {
+    let data = this.collection
 
-    if(!data.collection.variable) {
-      data.collection.variable = [];
+    if (!data.collection.variable) {
+      data.collection.variable = []
     }
 
     //TODO - Replace variable if it has the same name.
@@ -165,44 +132,46 @@ class MockServer {
     data.collection.variable.push({
       key: name,
       value: value,
-      type: "string"
+      type: 'string'
     })
-    
-    response = await instance.put(`/collections/${this.collectionId}`, data)
 
-    return response.data;
+    return data
   }
 
-  async finalize(options) {
-
-    if(!this.collectionDir || this.collectionDir == "") {
-      throw new Error("Pactman collection directory not specified. Please specify the collectionDir when creating the mock server.");
-    }
-
-    let response = await instance.get(`/collections/${this.collectionId}`)
-    let data = response.data;
-
-    if (!fs.existsSync(this.collectionDir)) {
-        //console.log('Directory not found, creating');
-        fs.mkdirSync(this.collectionDir);
-    }
-
-    fs.writeFileSync(`${this.collectionDir}/contract-test-api-${this.apiVersion}-${Date.now()}.json`, JSON.stringify(data, null, 2));
-
-    //delete the mock server and collection
-
-    if(options && options.deleteMock && options.deleteMock == true) {
-      //console.log("deleting mock server: /mocks/" + this.id)
-      await instance.delete(`/mocks/${this.id}`)
-    }
-    
-    if(options && options.deleteCollection && options.deleteCollection == true) {
-      //console.log("deleting collection: /collections/" + this.collectionId)
-      await instance.delete(`/collections/${this.collectionId}`)
-    }
-
-    return;
+  start (port) {
+    this.server = new PostmanLocalMockServer(port, this.collection)
+    this.server.start((err) => {
+      if (err) {
+        console.log(err)
+      } else {
+        console.log('Mock server started on port ' + port)
+      }
+    });
   }
+
+  stop () {
+    this.server.stop()
+  }
+
+  exportCollection (path) {
+    if (!path || path == '') {
+      throw new Error(
+        'Pactman collection path not specified. Please specify the collection path and try again.'
+      )
+    }
+
+    let pathParts = path.split('/')
+    let filename = pathParts.pop()
+
+    path = pathParts.join('/')
+
+    if (!fs.existsSync(path)) {
+      fs.mkdirSync(path, { recursive: true })
+    }
+
+    fs.writeFileSync(`${path}/${filename}`, JSON.stringify(this.collection, null, 2))
+  }
+
 }
 
 module.exports = MockServer
