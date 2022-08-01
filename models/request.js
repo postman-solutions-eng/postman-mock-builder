@@ -13,15 +13,10 @@ class Request {
     this.responses = [];
   }
 
-  static async create (state, method, path, headers, body) {
-    
-    //Get the current collection
-    let response = await instance.get(`/collections/${state.collectionId}`);
-
-    let data = response.data;
+  static create (state, method, path, headers, body) {
 
     //Find the state
-    for(let folder of data.collection.item){
+    for(let folder of state.collection.item){
       if(folder.name == state.name){
 
         //Calculate URL
@@ -54,14 +49,10 @@ class Request {
         break;
       }
     }
-
-    //Update the collection
-    response = await instance.put(`/collections/${state.collectionId}`, data)
-
     return new Request(method, path, headers, body, state);
   }
 
-  async addResponse (status, body, headers) {
+  addResponse (status, headers, body, uuid ) {
 
     if(!status) {
       throw new Error('Status is required.');
@@ -75,7 +66,7 @@ class Request {
       headers = {};
     }
 
-    let newResponse = await Response.create(this, status, body, headers);
+    let newResponse = Response.create(this, status, headers, body, uuid);
     this.responses.push(newResponse);
 
     return newResponse;

@@ -3,19 +3,16 @@ let instance = require('../utils/apiclient').instance
 let Request = require('../models/request');
 
 class State {
-  constructor (name, collectionId) {
+  constructor (name, collection) {
     this.name = name;
-    this.collectionId = collectionId;
+    this.collection = collection;
     this.requests = [];
   }
 
-  static async create (collectionId, name) {
-    let response = await instance.get(`/collections/${collectionId}`);
-
-    let data = response.data;
+  static create (collection, name) {
 
     //Add the folder to the collection
-    data.collection.item.splice(data.collection.item.length - 1, 0,{
+    collection.item.push({
       name: name,
       item: [],
       event: [{
@@ -30,12 +27,10 @@ class State {
       }]
     })
 
-    response = await instance.put(`/collections/${collectionId}`, data)
-
-    return new State(name, collectionId);
+    return new State(name, collection);
   }
 
-  async addRequest (method, path, headers, body) {
+  addRequest (method, path, headers, body) {
 
     if(!headers || Object.keys(headers).length == 0) {
       headers = {}
@@ -45,7 +40,7 @@ class State {
       body = "";
     }
 
-    let newRequest = await Request.create(this, method, path, headers, body);
+    let newRequest = Request.create(this, method, path, headers, body);
     this.requests.push(newRequest);
 
     return newRequest;
