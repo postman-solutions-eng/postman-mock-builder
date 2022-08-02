@@ -64,57 +64,11 @@ class MockServer {
       }
     }
 
-    if (options.consumerUrl) {
-      let url = new URL(options.consumerUrl)
-
-      collection.collection.item.push({
-        name: 'Notify Consumer',
-        item: [
-          {
-            name: 'POST Notify Consumer',
-            event: [
-              {
-                listen: 'prerequest',
-                script: {
-                  exec: [
-                    'if(!pm.variables.get("testResults")) {',
-                    '    throw new Error("Cannot notify consumers outside of a full collection run.")',
-                    '}'
-                  ],
-                  type: 'text/javascript'
-                }
-              }
-            ],
-            request: {
-              method: 'POST',
-              header: [],
-              body: {
-                mode: 'raw',
-                raw: '{{testResults}}',
-                options: {
-                  raw: {
-                    language: 'json'
-                  }
-                }
-              },
-              url: {
-                raw: url.href,
-                protocol: url.protocol.split(':')[0],
-                host: url.hostname.split('.'),
-                path: url.pathname.split('/')
-              }
-            },
-            response: []
-          }
-        ]
-      })
-    }
-
     return new MockServer(collection)
   }
 
-  addState (state) {
-    let newState = State.create(this.collection.collection, state)
+  addState (name) {
+    let newState = State.create(this.collection.collection, name)
     this.states.push(newState)
 
     return newState
@@ -138,15 +92,17 @@ class MockServer {
     return data
   }
 
-  start (port) {
+  async start (port) {
     this.server = new PostmanLocalMockServer(port, this.collection)
-    this.server.start((err) => {
+    return this.server.start((err) => {
       if (err) {
         console.log(err)
+        return err;
       } else {
-        console.log('Mock server started on port ' + port)
+        return `http://localhost:${port}`;
       }
     });
+    
   }
 
   stop () {
@@ -171,6 +127,8 @@ class MockServer {
 
     fs.writeFileSync(`${path}/${filename}`, JSON.stringify(this.collection, null, 2))
   }
+
+  
 
 }
 
