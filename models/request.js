@@ -1,7 +1,7 @@
 'use strict';
-let instance = require('../utils/apiclient').instance;
 let formatHeaders = require('../utils/common').formatHeaders;
 let Response = require('../models/response');
+const { v4: uuidv4 } = require('uuid');
 
 class Request {
   constructor (method, path, headers, body, state) {
@@ -52,21 +52,25 @@ class Request {
     return new Request(method, path, headers, body, state);
   }
 
-  addResponse (status, headers, body, uuid ) {
+  addResponse (options) {
 
-    if(!status) {
+    if(!options.status) {
       throw new Error('Status is required.');
     }
 
-    if(!body) {
-      body = "";
+    if(!options.body) {
+      options.body = "";
     }
 
-    if(!headers) {
-      headers = {};
+    if(!options.headers) {
+      options.headers = {};
     }
 
-    let newResponse = Response.create(this, status, headers, body, uuid);
+    if(!options.uuid) {
+      options.uuid = uuidv4();
+    }
+
+    let newResponse = Response.create(this, options.status, options.headers, options.body, options.uuid);
     this.responses.push(newResponse);
 
     return newResponse;

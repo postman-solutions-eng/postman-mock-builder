@@ -16,31 +16,10 @@ let successfulPostResponseId = uuidv4()
 let failedPostResponseId = uuidv4()
 
 describe('MockServer Tests', () => {
-  it('creates a new mock server with a consumerUrl', () => {
+
+  it('creates a new mock server', () => {
     let options = {
-      apiVersion: 'v1',
-      consumerUrl: 'https://consumer.com'
-    }
-
-    server = MockServer.create(options)
-
-    assert(server.collection.collection.info.name === 'Contract Tests [v1]')
-    assert(
-      server.collection.collection.info.description === 'Contract Tests [v1]'
-    )
-    assert(
-      server.collection.collection.info.schema ===
-        'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
-    )
-
-    assert(server.collection.collection.item[0].name === 'Setup')
-    assert(server.collection.collection.item[1].name === 'Notify Consumer')
-  })
-
-  it('creates a new mock server without a consumerUrl', () => {
-    let options = {
-      apiVersion: 'v1',
-      outputDir: 'test/output'
+      apiVersion: 'v1'
     }
 
     server = MockServer.create(options)
@@ -93,7 +72,10 @@ describe('Request Tests', () => {
     ]
 
     it('creates a new get request', () => {
-      request = state.addRequest('GET', '/api/products')
+      request = state.addRequest({
+        method: 'GET',
+        path: '/api/products'
+      })
 
       assert(request.method === 'GET')
       assert(request.path === '/api/products')
@@ -106,12 +88,11 @@ describe('Request Tests', () => {
     })
 
     it('creates a new 200 response', () => {
-      let response = request.addResponse(
-        200,
-        {},
-        payload,
-        successfulGetResponseId
-      )
+      let response = request.addResponse({
+        status: 200,
+        body: payload,
+        uuid: successfulGetResponseId
+      })
 
       assert(response.status === 200)
       assert(response.headers.length == 0)
@@ -125,14 +106,13 @@ describe('Request Tests', () => {
     })
 
     it('creates a new 401 response', () => {
-      let response = request.addResponse(
-        401,
-        {},
-        {
+      let response = request.addResponse({
+        status: 401,
+        body: {
           message: 'Unauthorized'
         },
-        failedGetResponseId
-      )
+        uuid: failedGetResponseId
+      })
 
       assert(response.status === 401)
       assert(response.headers.length == 0)
@@ -155,7 +135,11 @@ describe('Request Tests', () => {
         price: 10.99
       }
 
-      request = state.addRequest('POST', '/api/products', {}, payload)
+      request = state.addRequest({
+        method: 'POST',
+        path: '/api/products',
+        body: payload
+      })
 
       assert(request.method === 'POST')
       assert(request.path === '/api/products')
@@ -175,12 +159,11 @@ describe('Request Tests', () => {
         price: 10.99
       }
 
-      let response = request.addResponse(
-        200,
-        {},
-        payload,
-        successfulPostResponseId
-      )
+      let response = request.addResponse({
+        status: 200,
+        body: payload,
+        uuid: successfulPostResponseId
+      })
 
       assert(response.status === 200)
       assert(response.headers.length == 0)
@@ -194,14 +177,13 @@ describe('Request Tests', () => {
     })
 
     it('creates a new 401 response', () => {
-      let response = request.addResponse(
-        401,
-        {},
-        {
+      let response = request.addResponse({
+        status: 401,
+        body: {
           message: 'Unauthorized'
         },
-        failedPostResponseId
-      )
+        uuid: failedPostResponseId
+      })
 
       assert(response.status === 401)
       assert(response.headers.length == 0)
@@ -232,7 +214,7 @@ describe('Test the requests against the Mock Server', () => {
   let PORT = 3005
 
   before(() => {
-    server.start(PORT);
+    server.start(PORT)
   })
 
   it('Test the Successful GET request', done => {
@@ -253,27 +235,23 @@ describe('Test the requests against the Mock Server', () => {
       })
       .catch(error => {
         done(error)
-      }
-    )
-
+      })
   })
 
-  it('Test the Failed GET request', (done) => {
-
+  it('Test the Failed GET request', done => {
     let options = {
       headers: {
         'Content-Type': 'application/json',
         'x-mock-response-name': 'GET /api/products ' + failedGetResponseId
       }
-    };
+    }
 
-    axios.get(`http://localhost:${PORT}/api/products`, options)
-    .catch(error => {
+    axios.get(`http://localhost:${PORT}/api/products`, options).catch(error => {
       expect(error).to.be.instanceOf(Error)
       expect(error.response.status).to.equal(401)
       expect(error.response.data.message).to.equal('Unauthorized')
       done()
-    });
+    })
   })
 
   after(() => {
