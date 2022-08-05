@@ -7,6 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jordan Walsh <jordanwalsh23@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/postman-solutions-eng/postman-mock-builder"
+  },
   "license": "MIT",
   "dependencies": {
     "@jordanwalsh23/postman-local-mock-server": "^0.0.3",
