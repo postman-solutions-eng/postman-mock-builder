@@ -113,6 +113,7 @@ describe('Test Suite', () => {
     mockServer.stop()
   })
 })
+```
 
 ## Why use this?
 
