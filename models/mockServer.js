@@ -2,7 +2,7 @@
 let instance = require('../utils/apiclient').instance
 let State = require('../models/state')
 const fs = require('fs')
-const PostmanLocalMockServer = require('postman-local')
+const PostmanLocalMockServer = require('@jordanwalsh23/postman-local-mock-server')
 
 class MockServer {
   constructor (collection) {

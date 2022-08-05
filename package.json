@@ -1,16 +1,16 @@
 {
-  "name": "pactman",
-  "version": "1.0.0",
-  "description": "Consumer driven contract testing with Postman collections.",
+  "name": "@jordanwalsh23/postman-mock-builder",
+  "version": "0.0.1",
+  "description": "Allows you to programmatically build a mock server and run it locally using Postman collections.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jordan Walsh <jordanwalsh23@gmail.com>",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "dependencies": {
+    "@jordanwalsh23/postman-local-mock-server": "^0.0.3",
     "genson-js": "^0.0.8",
-    "postman-local": "file:../postman-local",
     "uuidv4": "^6.2.13"
   },
   "devDependencies": {
