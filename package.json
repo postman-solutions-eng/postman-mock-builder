@@ -1,6 +1,6 @@
 {
   "name": "@jordanwalsh23/postman-mock-builder",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Allows you to programmatically build a mock server and run it locally using Postman collections.",
   "main": "index.js",
   "scripts": {
