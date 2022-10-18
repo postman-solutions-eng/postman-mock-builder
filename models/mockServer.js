@@ -1,5 +1,4 @@
 'use strict'
-let instance = require('../utils/apiclient').instance
 let State = require('../models/state')
 const fs = require('fs')
 const PostmanLocalMockServer = require('@jordanwalsh23/postman-local-mock-server')

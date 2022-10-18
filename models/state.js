@@ -1,5 +1,4 @@
 'use strict'
-let instance = require('../utils/apiclient').instance
 let Request = require('../models/request')
 
 class State {
