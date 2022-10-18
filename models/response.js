@@ -2,7 +2,6 @@
 const createSchema = require('genson-js').createSchema;
 const urlPathToArray = require('../utils/common').urlPathToArray;
 const formatHeaders = require('../utils/common').formatHeaders;
-let instance = require('../utils/apiclient').instance
 
 
 class Response {
