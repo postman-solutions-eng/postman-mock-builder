@@ -13,7 +13,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@jordanwalsh23/postman-local-mock-server": "^0.0.3",
+    "@jordanwalsh23/postman-local-mock-server": "^0.0.6",
     "genson-js": "^0.0.8",
     "uuidv4": "^6.2.13"
   },
