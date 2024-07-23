@@ -25,28 +25,28 @@ describe('MockServer Tests', () => {
     server = MockServer.create(options)
 
     assert(
-      server.collection.collection.info.name ===
+      server.collection.info.name ===
         `Contract Tests [${options.apiVersion}]`
     )
     assert(
-      server.collection.collection.info.description ===
+      server.collection.info.description ===
         `Contract Tests [${options.apiVersion}]`
     )
     assert(
-      server.collection.collection.info.schema ===
+      server.collection.info.schema ===
         'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
     )
 
-    assert(server.collection.collection.item[0].name === 'Setup')
+    assert(server.collection.item[0].name === 'Setup')
   })
 })
 
 describe('Variable Tests', () => {
   it('adds a variable to a mock server', () => {
     server.addVariable('baseUrl', 'http://localhost:3005')
-    assert(server.collection.collection.variable[0].key === 'baseUrl')
+    assert(server.collection.variable[0].key === 'baseUrl')
     assert(
-      server.collection.collection.variable[0].value === 'http://localhost:3005'
+      server.collection.variable[0].value === 'http://localhost:3005'
     )
   })
 })
@@ -56,8 +56,8 @@ describe('State Tests', () => {
     state = server.addState('State 1')
     assert(state.name === 'State 1')
 
-    assert(server.collection.collection.item[0].name === 'Setup')
-    assert(server.collection.collection.item[1].name === 'State 1')
+    assert(server.collection.item[0].name === 'Setup')
+    assert(server.collection.item[1].name === 'State 1')
   })
 })
 
@@ -82,7 +82,7 @@ describe('Request Tests', () => {
       assert(request.headers.length == 0)
 
       assert(
-        server.collection.collection.item[1].item[0].name ===
+        server.collection.item[1].item[0].name ===
           'GET /api/products'
       )
     })
@@ -100,7 +100,7 @@ describe('Request Tests', () => {
       assert(response.body.price === payload.price)
 
       assert(
-        server.collection.collection.item[1].item[0].response[0].name ==
+        server.collection.item[1].item[0].response[0].name ==
           'GET /api/products ' + successfulGetResponseId
       )
     })
@@ -119,7 +119,7 @@ describe('Request Tests', () => {
       assert(response.body.message === 'Unauthorized')
 
       assert(
-        server.collection.collection.item[1].item[0].response[1].name ==
+        server.collection.item[1].item[0].response[1].name ==
           'GET /api/products ' + failedGetResponseId
       )
     })
@@ -148,7 +148,7 @@ describe('Request Tests', () => {
       assert(request.body.price === payload.price)
 
       assert(
-        server.collection.collection.item[1].item[1].name ===
+        server.collection.item[1].item[1].name ===
           'POST /api/products'
       )
     })
@@ -162,16 +162,19 @@ describe('Request Tests', () => {
       let response = request.addResponse({
         status: 200,
         body: payload,
+        headers: {
+          'Content-Type': 'application/json'
+        },
         uuid: successfulPostResponseId
       })
 
       assert(response.status === 200)
-      assert(response.headers.length == 0)
+      assert(response.headers.length == 1)
       assert(response.body.name === payload.name)
       assert(response.body.price === payload.price)
 
       assert(
-        server.collection.collection.item[1].item[1].response[0].name ==
+        server.collection.item[1].item[1].response[0].name ==
           'POST /api/products ' + successfulPostResponseId
       )
     })
@@ -190,7 +193,7 @@ describe('Request Tests', () => {
       assert(response.body.message === 'Unauthorized')
 
       assert(
-        server.collection.collection.item[1].item[1].response[1].name ==
+        server.collection.item[1].item[1].response[1].name ==
           'POST /api/products ' + failedPostResponseId
       )
     })
@@ -220,7 +223,7 @@ describe('Test the requests against the Mock Server', () => {
   it('Test the Successful GET request', done => {
     let options = {
       headers: {
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'x-mock-response-name': 'GET /api/products ' + successfulGetResponseId
       }
     }

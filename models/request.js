@@ -21,31 +21,36 @@ class Request {
 
         //Calculate URL
         headers = formatHeaders(headers);
-        
-        //Create the request within the state.
-        folder.item.push({
+
+        let item = {
           name: `${method} ${path}`,
           request: {
             method: method,
             header: headers,
             url: {
-              raw: path,
-              protocol: '',
-              host: '{{baseUrl}}',
-              path: path.split('/')
-            },
-            body: {
-							mode: "raw",
-							raw: JSON.stringify(body),
-							options: {
-								raw: {
-									language: "json"
-								}
-							}
-						}
-          },
-          response: []
-        })
+              raw: `{{baseUrl}}${path}`,
+              host: ['{{baseUrl}}'],
+              path: path.split('/').filter(item => item.trim() !== "")
+            }
+          }
+        };
+
+        if(method == "POST" || method == "PUT" || method == "PATCH") {
+          item.request.body = {
+            mode: "raw",
+            raw: JSON.stringify(body),
+            options: {
+              raw: {
+                language: "json"
+              }
+            }
+          }
+        }
+
+        item.response = [];
+        
+        //Create the request within the state.
+        folder.item.push(item)
         break;
       }
     }
