@@ -4,85 +4,84 @@ const fs = require('fs')
 const PostmanLocalMockServer = require('@jordanwalsh23/postman-local-mock-server')
 
 class MockServer {
-  constructor (collection) {
+  constructor(collection) {
     this.collection = collection
     this.states = []
     this.server = null;
   }
 
-  static create (options) {
+  static create(options) {
     let apiVersion = options.apiVersion
 
     let collection = {
-      collection: {
-        info: {
-          name: `Contract Tests [${apiVersion}]`,
-          description: `Contract Tests [${apiVersion}]`,
-          schema:
-            'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
-        },
-        item: [
-          {
-            name: 'Setup',
-            item: [
-              {
-                name: 'Set Variables',
-                event: [
-                  {
-                    listen: 'test',
-                    script: {
-                      exec: [
-                        '//Used to differentiate between individual tests and tests run using the collection runner.',
-                        'let testResults = {',
-                        "  id: pm.variables.replaceIn('{{$guid}}'),",
-                        '  createdDate: Date.now(),',
-                        '  apiVersion: "' + options.apiVersion + '",',
-                        '  states: {}',
-                        '};',
-                        'pm.variables.set("testResults", JSON.stringify(testResults));'
-                      ],
-                      type: 'text/javascript'
-                    }
+      info: {
+        name: `Contract Tests [${apiVersion}]`,
+        description: `Contract Tests [${apiVersion}]`,
+        schema:
+          'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
+      },
+      item: [
+        {
+          name: 'Setup',
+          item: [
+            {
+              name: 'Set Variables',
+              event: [
+                {
+                  listen: 'test',
+                  script: {
+                    exec: [
+                      '//Used to differentiate between individual tests and tests run using the collection runner.',
+                      'let testResults = {',
+                      "  id: pm.variables.replaceIn('{{$guid}}'),",
+                      '  createdDate: Date.now(),',
+                      '  apiVersion: "' + options.apiVersion + '",',
+                      '  states: {}',
+                      '};',
+                      'pm.variables.set("testResults", JSON.stringify(testResults));'
+                    ],
+                    type: 'text/javascript'
                   }
-                ],
-                request: {
-                  method: 'GET',
-                  header: [],
-                  url: {
-                    raw: 'https://postman-echo.com/get',
-                    protocol: 'https',
-                    host: ['postman-echo', 'com'],
-                    path: ['get']
-                  }
-                },
-                response: []
-              }
-            ]
-          }
-        ]
-      }
+                }
+              ],
+              request: {
+                method: 'GET',
+                header: [],
+                url: {
+                  raw: 'https://postman-echo.com/get',
+                  protocol: 'https',
+                  host: ['postman-echo', 'com'],
+                  path: ['get']
+                }
+              },
+              response: []
+            }
+          ]
+        }
+      ]
     }
+
 
     return new MockServer(collection)
   }
 
-  addState (name) {
-    let newState = State.create(this.collection.collection, name)
+  addState(name) {
+    let newState = State.create(this.collection, name)
     this.states.push(newState)
 
     return newState
   }
 
-  addVariable (name, value) {
+  addVariable(name, value) {
     let data = this.collection
 
-    if (!data.collection.variable) {
-      data.collection.variable = []
+    if (!data.variable) {
+      data.variable = []
     }
 
     //TODO - Replace variable if it has the same name.
 
-    data.collection.variable.push({
+    data.variable.push({
       key: name,
       value: value,
       type: 'string'
@@ -91,8 +90,12 @@ class MockServer {
     return data
   }
 
-  async start (port) {
-    this.server = new PostmanLocalMockServer(port, this.collection)
+  async start(port) {
+    this.server = new PostmanLocalMockServer({
+      port: port,
+      collection: this.collection,
+      debug: true
+    })
     return this.server.start((err) => {
       if (err) {
         console.log(err)
@@ -101,14 +104,14 @@ class MockServer {
         return `http://localhost:${port}`;
       }
     });
-    
+
   }
 
-  stop () {
+  stop() {
     this.server.stop()
   }
 
-  exportCollection (path) {
+  exportCollection(path) {
     if (!path || path == '') {
       throw new Error(
         'Pactman collection path not specified. Please specify the collection path and try again.'
@@ -127,7 +130,7 @@ class MockServer {
     fs.writeFileSync(`${path}/${filename}`, JSON.stringify(this.collection, null, 2))
   }
 
-  
+
 
 }
 
